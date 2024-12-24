@@ -1154,13 +1154,17 @@ var Thread = /*#__PURE__*/function () {
                 if (resolve_index === -1) {
                   resolve_index = _this2.resolves.length;
                 }
+
+                // LOG('resolve_index', resolve_index)
+
                 _this2.resolves[resolve_index] = resolve;
 
                 // this.worker.onmessage = resolve;
 
-                // TODO: move to init().
+                // TODO: move to init() ?
                 _this2.worker.onmessage = function (_ref) {
                   var data = _ref.data;
+                  // LOG('data.resolve_index', data.resolve_index)
                   _this2.resolves[data.resolve_index]();
                   _this2.resolves[data.resolve_index] = null;
                 };
