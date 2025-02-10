@@ -1707,6 +1707,7 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
  * if >11, std::string object name stores address of beginning of the data.
  * So in second case one can use WasmWrapper::c_string method to get string bytes.
  * Maybe it's not related to data length, but to dynamic memory allocation.
+ * Probably it is due to small string optimization (SSO).
  *
  *
  *
@@ -2018,9 +2019,11 @@ var WasmWrapper = /*#__PURE__*/function () {
               if (!this.memory) {
                 this.memory = exports.memory;
               }
-              DEBUG_INFO_PUSH("WASM MEMORY: ".concat(this.memory.buffer.byteLength / 65536, " pages (").concat(this.memory.buffer.byteLength, " bytes)"));
+              DEBUG_INFO_PUSH('WASM WRAPPER:', this);
+              DEBUG_INFO_PUSH('WASM MEMORY:', this.memory);
+              DEBUG_INFO_PUSH("WASM MEMORY INITIAL SIZE: ".concat(this.memory.buffer.byteLength / 65536, " pages (").concat(this.memory.buffer.byteLength, " bytes)"));
               return _context4.abrupt("return", exports);
-            case 23:
+            case 25:
             case "end":
               return _context4.stop();
           }
@@ -2375,47 +2378,65 @@ if (self.window) {
   WasmWrapper.prototype.getNewThread4 = function () {
     return new WasmWrapper.Thread4(this);
   };
+
+  // WasmWrapper.prototype.initThreads = async function (thread_count)
+  // {
+  // 	if (this.emulateThreads === true || this.max_thread_count < 1)
+  // 	{
+  // 		const threads =
+  // 			new Array(thread_count)
+  // 				.fill(null)
+  // 				.map(() => new WasmWrapper.Thread3Emul(this));
+
+  // 		return threads;
+  // 	}
+
+  // 	// const threads =
+  // 	// 	new Array(thread_count)
+  // 	// 		.fill(null)
+  // 	// 		.map(() => new WasmWrapper.Thread3(this));
+  // 	const threads =
+  // 		new Array(Math.min(thread_count, this.max_thread_count))
+  // 			.fill(null)
+  // 			.map(() => new WasmWrapper.Thread3Ext(this));
+
+  // 	await Promise.all(threads.map(thread => thread.init()));
+
+  // 	if (thread_count > this.max_thread_count)
+  // 	{
+  // 		const _threads = [];
+
+  // 		for (; thread_count > this.max_thread_count; --thread_count)
+  // 		{
+  // 			_threads.push(threads[(thread_count - this.max_thread_count) % threads.length]);
+  // 		}
+
+  // 		threads.push(..._threads);
+  // 	}
+
+  // 	return threads;
+  // };
   WasmWrapper.prototype.initThreads = /*#__PURE__*/function () {
     var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee8(thread_count) {
       var _this5 = this;
-      var _threads2, threads, _threads;
+      var threads;
       return _regeneratorRuntime().wrap(function _callee8$(_context8) {
         while (1) switch (_context8.prev = _context8.next) {
           case 0:
-            if (!(this.emulateThreads === true || this.max_thread_count < 1)) {
-              _context8.next = 3;
-              break;
-            }
-            _threads2 = new Array(thread_count).fill(null).map(function () {
-              return new WasmWrapper.Thread3Emul(_this5);
+            threads = new Array(thread_count).fill(null).map(function () {
+              return new WasmWrapper.Thread3(_this5);
             });
-            return _context8.abrupt("return", _threads2);
-          case 3:
-            // const threads =
-            // 	new Array(thread_count)
-            // 		.fill(null)
-            // 		.map(() => new WasmWrapper.Thread3(this));
-            threads = new Array(Math.min(thread_count, this.max_thread_count)).fill(null).map(function () {
-              return new WasmWrapper.Thread3Ext(_this5);
-            });
-            _context8.next = 6;
+            _context8.next = 3;
             return Promise.all(threads.map(function (thread) {
               return thread.init();
             }));
-          case 6:
-            if (thread_count > this.max_thread_count) {
-              _threads = [];
-              for (; thread_count > this.max_thread_count; --thread_count) {
-                _threads.push(threads[(thread_count - this.max_thread_count) % threads.length]);
-              }
-              threads.push.apply(threads, _threads);
-            }
+          case 3:
             return _context8.abrupt("return", threads);
-          case 8:
+          case 4:
           case "end":
             return _context8.stop();
         }
-      }, _callee8, this);
+      }, _callee8);
     }));
     return function (_x6) {
       return _ref3.apply(this, arguments);
